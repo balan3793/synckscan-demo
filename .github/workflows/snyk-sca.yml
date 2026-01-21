@@ -20,6 +20,11 @@ jobs:
         with:
           python-version: '3.11'
 
+      # ✅ Ensure pip pulls prebuilt wheels instead of compiling PyYAML
+      - name: Upgrade pip and wheel
+        run: |
+          python -m pip install --upgrade pip setuptools wheel
+
       - name: Install dependencies
         run: |
           cd vulcode
