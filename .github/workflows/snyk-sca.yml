@@ -1,64 +1,39 @@
-name: Snyk SCA Scan
+name: Snyk Scan
 
 on:
-  workflow_dispatch:   # manual trigger
   push:
-    paths:
-      - 'vulcode/**'
+    branches:
+      - main
   pull_request:
-    paths:
-      - 'vulcode/**'
 
 jobs:
   snyk:
     runs-on: ubuntu-latest
+
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v3
 
-      - name: Install jq
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'  # Set your Python version
+
+      - name: Install dependencies
         run: |
-          sudo apt-get update
-          sudo apt-get install -y jq
+          python -m pip install --upgrade pip
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
 
-      - name: Install system dependencies for PyYAML
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y build-essential libyaml-dev python3-dev
+      - name: Install Snyk CLI
+        run: npm install -g snyk
 
-      - name: Upgrade pip/setuptools/wheel
-        run: python3 -m pip install --upgrade pip setuptools wheel
-
-      - name: Install Python dependencies
-        run: pip install -r vulcode/requirements.txt
-
-      - name: Run Snyk SCA (local test)
-        uses: snyk/actions/python@master
+      - name: Authenticate Snyk
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
-        with:
-          command: test
-          args: --file=vulcode/requirements.txt --package-manager=pip --json-file-output=report.json
+        run: snyk auth $SNYK_TOKEN
 
-      - name: Push results to Snyk dashboard
-        uses: snyk/actions/python@master
-        env:
-          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
-        with:
-          command: monitor
-          args: --file=vulcode/requirements.txt --package-manager=pip
+      - name: Run Snyk test
+        run: snyk test --all-projects --severity-threshold=high
 
-      - name: Convert JSON to HTML
-        run: python convert_to_html.py
-
-      - name: Upload reports
-        uses: actions/upload-artifact@v4
-        with:
-          name: snyk-sca-reports
-          path: |
-            report.json
-            report.html
-
-      - name: Show Snyk results (CLI summary)
-        run: |
-          cat report.json | jq '.vulnerabilities[] | {id, severity, title}'
+      - name: Monitor project in Snyk
+        run: snyk monitor --all-projects
