@@ -22,21 +22,7 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y jq
 
-      # Install system dependencies required for building PyYAML
-      - name: Install system dependencies for PyYAML
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y build-essential libyaml-dev python3-dev
-
-      # Upgrade pip, setuptools, wheel (helps with building old packages)
-      - name: Upgrade pip/setuptools/wheel
-        run: python3 -m pip install --upgrade pip setuptools wheel
-
-      # Install Python dependencies so Snyk can resolve them
-      - name: Install Python dependencies
-        run: pip install -r vulcode/requirements.txt
-
-      # Run local Snyk test (outputs JSON file)
+      # Run local Snyk test (outputs JSON file, no pip install)
       - name: Run Snyk SCA (local test)
         uses: snyk/actions/python@master
         env:
@@ -45,7 +31,7 @@ jobs:
           command: test
           args: --file=vulcode/requirements.txt --package-manager=pip --skip-unresolved --json-file-output=report.json
 
-      # Push results to Snyk dashboard
+      # Push results to Snyk dashboard (no pip install)
       - name: Push results to Snyk dashboard
         uses: snyk/actions/python@master
         env:
