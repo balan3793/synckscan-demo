@@ -16,12 +16,6 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # ✅ Install jq for JSON processing
-      - name: Install jq
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y jq
-
       - name: Run Snyk SCA
         uses: snyk/actions/python@master
         env:
@@ -30,17 +24,12 @@ jobs:
           command: test
           args: --file=vulcode/requirements.txt --package-manager=pip --skip-unresolved --json-file-output=report.json
 
-      - name: Convert JSON to HTML
-        run: python convert_to_html.py
-
-      - name: Upload reports
+      - name: Upload report
         uses: actions/upload-artifact@v4
         with:
-          name: snyk-sca-reports
-          path: |
-            report.json
-            report.html
+          name: snyk-sca-report
+          path: report.json
 
-      - name: Show Snyk results (CLI summary)
+      - name: Show Snyk results
         run: |
           cat report.json | jq '.vulnerabilities[] | {id, severity, title}'
