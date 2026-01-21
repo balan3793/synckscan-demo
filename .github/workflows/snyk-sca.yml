@@ -1,44 +1,59 @@
-name: Snyk Python Scan
+name: Snyk SCA Scan
 
 on:
+  workflow_dispatch:   # manual trigger from Actions tab
   push:
-    branches:
-      - main
+    paths:
+      - 'vulcode/**'
   pull_request:
+    paths:
+      - 'vulcode/**'
 
 jobs:
   snyk:
     runs-on: ubuntu-latest
-
     steps:
-      # 1. Checkout your repo
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
-      # 2. Set up Python
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.12'  # match your project Python version
-
-      # 3. Install dependencies
-      - name: Install dependencies
+      # Install jq for JSON parsing
+      - name: Install jq
         run: |
-          python -m pip install --upgrade pip
-          pip install -r vulcode/requirements.txt
+          sudo apt-get update
+          sudo apt-get install -y jq
 
-      # 4. Run Snyk test (fail workflow on vulnerability)
-      - name: Snyk Test
+      # Run local Snyk test (outputs JSON file)
+      - name: Run Snyk SCA (local test)
         uses: snyk/actions/python@master
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
         with:
           command: test
+          args: --file=vulcode/requirements.txt --package-manager=pip --json-file-output=report.json
+
+      # Push results to Snyk dashboard
+      - name: Push results to Snyk dashboard
+        uses: snyk/actions/python@master
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
-
-      # 5. Monitor to update Snyk dashboard
-      - name: Snyk Monitor
-        uses: snyk/actions/python@master
         with:
           command: monitor
-        env:
-          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+          args: --file=vulcode/requirements.txt --package-manager=pip
+
+      # Convert JSON to HTML
+      - name: Convert JSON to HTML
+        run: python convert_to_html.py
+
+      # Upload both JSON and HTML reports
+      - name: Upload reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: snyk-sca-reports
+          path: |
+            report.json
+            report.html
+
+      # Show CLI summary in logs
+      - name: Show Snyk results (CLI summary)
+        run: |
+          cat report.json | jq '.vulnerabilities[] | {id, severity, title}'
