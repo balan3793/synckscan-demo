@@ -1,7 +1,7 @@
 name: Snyk SCA Scan
 
 on:
-  workflow_dispatch:   # Manual trigger from Actions tab
+  workflow_dispatch:   # Manual trigger
   push:
     paths:
       - 'vulcode/**'
@@ -11,9 +11,9 @@ on:
 
 jobs:
   snyk:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04   # Ubuntu with Python 3.11
     steps:
-      # Step 1: Checkout your code
+      # Step 1: Checkout code
       - name: Checkout code
         uses: actions/checkout@v4
 
@@ -23,19 +23,26 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y jq
 
-      # Step 3: Install Python build dependencies (for packages like PyYAML)
+      # Step 3: Install Python build dependencies
       - name: Install Python build dependencies
         run: |
           sudo apt-get update
           sudo apt-get install -y build-essential python3-dev libffi-dev libssl-dev
 
-      # Step 4: Upgrade pip and install Python dependencies
+      # Step 4: Set up Python 3.11
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.11
+
+      # Step 5: Upgrade pip and install Python dependencies
       - name: Install Python dependencies
         run: |
           python -m pip install --upgrade pip setuptools wheel
+          pip install PyYAML --upgrade
           pip install -r vulcode/requirements.txt
 
-      # Step 5: Run local Snyk test (outputs JSON file)
+      # Step 6: Run local Snyk test (outputs JSON file)
       - name: Run Snyk SCA (local test)
         uses: snyk/actions/python@master
         env:
@@ -44,7 +51,7 @@ jobs:
           command: test
           args: --file=vulcode/requirements.txt --package-manager=pip --skip-unresolved --json-file-output=report.json
 
-      # Step 6: Push results to Snyk dashboard
+      # Step 7: Push results to Snyk dashboard
       - name: Push results to Snyk dashboard
         uses: snyk/actions/python@master
         env:
@@ -53,11 +60,11 @@ jobs:
           command: monitor
           args: --file=vulcode/requirements.txt --package-manager=pip
 
-      # Step 7: Convert JSON to HTML
+      # Step 8: Convert JSON to HTML
       - name: Convert JSON to HTML
         run: python convert_to_html.py
 
-      # Step 8: Upload both JSON and HTML reports
+      # Step 9: Upload both JSON and HTML reports
       - name: Upload reports
         uses: actions/upload-artifact@v4
         with:
@@ -66,7 +73,7 @@ jobs:
             report.json
             report.html
 
-      # Step 9: Show CLI summary in logs
+      # Step 10: Show CLI summary in logs
       - name: Show Snyk results (CLI summary)
         run: |
           cat report.json | jq '.vulnerabilities[] | {id, severity, title}'
