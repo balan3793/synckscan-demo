@@ -1,4 +1,3 @@
-# NOTE: intentionally includes older dependencies for dependency-scanning tests.
 Flask==0.12           # CVE-2018-1000656 (debug mode exposure)
 requests==2.19.0      # CVE-2018-18074 (auth header leak on redirect)
 PyYAML==5.3           # CVE-2020-1747 (arbitrary code execution via yaml.load)
