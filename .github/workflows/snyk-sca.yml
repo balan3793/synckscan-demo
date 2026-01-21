@@ -1,7 +1,7 @@
 name: Snyk SCA Scan
 
 on:
-  workflow_dispatch:   # manual trigger from Actions tab
+  workflow_dispatch:   # manual trigger
   push:
     paths:
       - 'vulcode/**'
@@ -16,27 +16,22 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # Install jq for JSON parsing
       - name: Install jq
         run: |
           sudo apt-get update
           sudo apt-get install -y jq
 
-      # Install system dependencies required for PyYAML build
       - name: Install system dependencies for PyYAML
         run: |
           sudo apt-get update
           sudo apt-get install -y build-essential libyaml-dev python3-dev
 
-      # Upgrade pip, setuptools, wheel
       - name: Upgrade pip/setuptools/wheel
         run: python3 -m pip install --upgrade pip setuptools wheel
 
-      # Install Python dependencies so Snyk can resolve them
       - name: Install Python dependencies
         run: pip install -r vulcode/requirements.txt
 
-      # Run local Snyk test (outputs JSON file)
       - name: Run Snyk SCA (local test)
         uses: snyk/actions/python@master
         env:
@@ -45,7 +40,6 @@ jobs:
           command: test
           args: --file=vulcode/requirements.txt --package-manager=pip --json-file-output=report.json
 
-      # Push results to Snyk dashboard
       - name: Push results to Snyk dashboard
         uses: snyk/actions/python@master
         env:
@@ -54,11 +48,9 @@ jobs:
           command: monitor
           args: --file=vulcode/requirements.txt --package-manager=pip
 
-      # Convert JSON to HTML
       - name: Convert JSON to HTML
         run: python convert_to_html.py
 
-      # Upload both JSON and HTML reports
       - name: Upload reports
         uses: actions/upload-artifact@v4
         with:
@@ -67,7 +59,6 @@ jobs:
             report.json
             report.html
 
-      # Show CLI summary in logs
       - name: Show Snyk results (CLI summary)
         run: |
           cat report.json | jq '.vulnerabilities[] | {id, severity, title}'
