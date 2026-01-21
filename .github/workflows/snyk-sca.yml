@@ -16,6 +16,12 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      # ✅ Install jq for JSON processing
+      - name: Install jq
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y jq
+
       - name: Run Snyk SCA
         uses: snyk/actions/python@master
         env:
