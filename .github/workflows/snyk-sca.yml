@@ -1,16 +1,7 @@
 name: Snyk SCA Scan
 
 on:
-  workflow_dispatch:   # 👈 enables manual trigger
-    inputs:
-      scan_target:
-        description: 'Which folder to scan (default: vulcode)'
-        required: false
-        default: 'vulcode'
-      severity_threshold:
-        description: 'Minimum severity to report (low, medium, high, critical)'
-        required: false
-        default: 'low'
+  workflow_dispatch:   # 👈 allows manual trigger from Actions tab
   push:
     paths:
       - 'vulcode/**'
@@ -36,9 +27,8 @@ jobs:
 
       - name: Install dependencies (force wheels only)
         run: |
-          cd ${{ github.event.inputs.scan_target }}
-          sed -i 's/^PyYAML.*/PyYAML==6.0.1/' requirements.txt
-          pip install --only-binary=:all: -r requirements.txt
+          sed -i 's/^PyYAML.*/PyYAML==6.0.1/' vulcode/requirements.txt
+          pip install --only-binary=:all: -r vulcode/requirements.txt
 
       - name: Run Snyk SCA
         uses: snyk/actions/python@master
@@ -46,9 +36,7 @@ jobs:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
         with:
           command: test
-          args: --file=${{ github.event.inputs.scan_target }}/requirements.txt \
-                --severity-threshold=${{ github.event.inputs.severity_threshold }} \
-                --json-file-output=report.json
+          args: --file=vulcode/requirements.txt --json-file-output=report.json
 
       - name: Upload report
         uses: actions/upload-artifact@v4
