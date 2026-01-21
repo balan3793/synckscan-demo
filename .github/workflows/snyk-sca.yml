@@ -1,10 +1,9 @@
 name: Snyk SCA Scan
 
 on:
-  workflow_dispatch:   # manual trigger
   push:
     paths:
-      - 'vulcode/**'
+      - 'vulcode/**'   # ✅ triggers only when files inside vulcode/ change
   pull_request:
     paths:
       - 'vulcode/**'
@@ -36,9 +35,8 @@ jobs:
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
         with:
-          args: --file=requirements.txt --json-file-output=../report.json
           command: test
-          working-directory: vulcode   # 👈 ensures Snyk looks inside vulcode/
+          args: --file=vulcode/requirements.txt --json-file-output=report.json
 
       - name: Upload report
         uses: actions/upload-artifact@v4
