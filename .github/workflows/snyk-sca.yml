@@ -24,12 +24,17 @@ jobs:
           command: test
           args: --file=vulcode/requirements.txt --package-manager=pip --skip-unresolved --json-file-output=report.json
 
-      - name: Upload report
+      - name: Convert JSON to HTML
+        run: python convert_to_html.py
+
+      - name: Upload reports
         uses: actions/upload-artifact@v4
         with:
-          name: snyk-sca-report
-          path: report.json
+          name: snyk-sca-reports
+          path: |
+            report.json
+            report.html
 
-      - name: Show Snyk results
+      - name: Show Snyk results (CLI summary)
         run: |
           cat report.json | jq '.vulnerabilities[] | {id, severity, title}'
