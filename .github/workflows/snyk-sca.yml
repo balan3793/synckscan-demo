@@ -22,6 +22,10 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y jq
 
+      # Install Python dependencies so Snyk can resolve them
+      - name: Install Python dependencies
+        run: pip install -r vulcode/requirements.txt
+
       # Run local Snyk test (outputs JSON file)
       - name: Run Snyk SCA (local test)
         uses: snyk/actions/python@master
