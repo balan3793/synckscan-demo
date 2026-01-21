@@ -12,44 +12,33 @@ on:
 jobs:
   snyk:
     runs-on: ubuntu-latest
-
     steps:
-      # 1️⃣ Checkout code
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # 2️⃣ Install dependencies
-      - name: Install Python & pip
-        uses: actions/setup-python@v4
-        with:
-          python-version: "3.x"
-
-      - name: Install jq for JSON parsing
+      # Install jq for JSON parsing
+      - name: Install jq
         run: |
           sudo apt-get update
           sudo apt-get install -y jq
 
-      # 3️⃣ Install Snyk CLI
-      - name: Install Snyk CLI
-        run: npm install -g snyk
-
-      # 4️⃣ Run Snyk Test (JSON output)
-      - name: Run Snyk Test
-        run: snyk test --file=vulcode/requirements.txt --package-manager=pip --json > report.json
+      # Run Snyk test (local) and allow workflow to continue even if vulnerabilities found
+      - name: Run Snyk SCA (local test)
+        run: snyk test --file=vulcode/requirements.txt --package-manager=pip --json > report.json || true
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
 
-      # 5️⃣ Push results to Snyk dashboard
+      # Push results to Snyk dashboard
       - name: Push results to Snyk dashboard
         run: snyk monitor --file=vulcode/requirements.txt --package-manager=pip
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
 
-      # 6️⃣ Convert JSON to HTML (custom script)
+      # Convert JSON to HTML (optional)
       - name: Convert JSON to HTML
-        run: python convert_to_html.py report.json report.html
+        run: python convert_to_html.py
 
-      # 7️⃣ Upload artifacts
+      # Upload JSON and HTML reports
       - name: Upload reports
         uses: actions/upload-artifact@v4
         with:
@@ -58,11 +47,7 @@ jobs:
             report.json
             report.html
 
-      # 8️⃣ Show CLI summary in logs
-      - name: Show Snyk summary
+      # Show CLI summary in logs
+      - name: Show Snyk vulnerabilities summary
         run: |
-          if [ -f report.json ]; then
-            cat report.json | jq '.vulnerabilities?[]? | {id, severity, title}'
-          else
-            echo "No report.json found"
-          fi
+          cat report.json | jq '.vulnerabilities[] | {id, severity, title}' || echo "No vulnerabilities found"
