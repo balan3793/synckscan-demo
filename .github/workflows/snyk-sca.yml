@@ -11,7 +11,7 @@ on:
 
 jobs:
   snyk:
-    runs-on: ubuntu-22.04   # Ubuntu with Python 3.10 available
+    runs-on: ubuntu-22.04
     steps:
       # Step 1: Checkout code
       - name: Checkout code
@@ -23,24 +23,24 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y jq
 
-      # Step 3: Install Python build dependencies (for any compiled packages)
+      # Step 3: Install Python build dependencies (for compiled packages)
       - name: Install Python build dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y build-essential python3-dev libffi-dev libssl-dev
+          sudo apt-get install -y build-essential python3-dev libffi-dev libssl-dev python3-pip
 
-      # Step 4: Set up Python 3.10
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: 3.10
+      # Step 4: Verify system Python
+      - name: Verify Python version
+        run: |
+          python3 --version
+          pip3 --version
 
-      # Step 5: Upgrade pip and install Python dependencies safely
+      # Step 5: Upgrade pip, setuptools, wheel & install Python dependencies
       - name: Install Python dependencies
         run: |
-          python -m pip install --upgrade pip setuptools wheel
-          pip install PyYAML>=6.0
-          pip install -r vulcode/requirements.txt
+          python3 -m pip install --upgrade pip setuptools wheel
+          python3 -m pip install PyYAML>=6.0
+          python3 -m pip install -r vulcode/requirements.txt
 
       # Step 6: Run local Snyk test (outputs JSON file)
       - name: Run Snyk SCA (local test)
@@ -62,7 +62,7 @@ jobs:
 
       # Step 8: Convert JSON to HTML
       - name: Convert JSON to HTML
-        run: python convert_to_html.py
+        run: python3 convert_to_html.py
 
       # Step 9: Upload both JSON and HTML reports
       - name: Upload reports
