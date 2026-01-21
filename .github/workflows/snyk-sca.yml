@@ -1,7 +1,7 @@
 name: Snyk SCA Scan
 
 on:
-  workflow_dispatch:
+  workflow_dispatch:   # manual trigger from Actions tab
   push:
     paths:
       - 'vulcode/**'
@@ -22,27 +22,43 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y jq
 
-      # Install Snyk CLI
-      - name: Install Snyk CLI
-        run: npm install -g snyk
+      # Install system dependencies required for PyYAML build
+      - name: Install system dependencies for PyYAML
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential libyaml-dev python3-dev
 
-      # Run Snyk test (local) and allow workflow to continue even if vulnerabilities found
+      # Upgrade pip, setuptools, wheel
+      - name: Upgrade pip/setuptools/wheel
+        run: python3 -m pip install --upgrade pip setuptools wheel
+
+      # Install Python dependencies so Snyk can resolve them
+      - name: Install Python dependencies
+        run: pip install -r vulcode/requirements.txt
+
+      # Run local Snyk test (outputs JSON file)
       - name: Run Snyk SCA (local test)
-        run: snyk test --file=vulcode/requirements.txt --package-manager=pip --json > report.json || true
+        uses: snyk/actions/python@master
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        with:
+          command: test
+          args: --file=vulcode/requirements.txt --package-manager=pip --json-file-output=report.json
 
       # Push results to Snyk dashboard
       - name: Push results to Snyk dashboard
-        run: snyk monitor --file=vulcode/requirements.txt --package-manager=pip
+        uses: snyk/actions/python@master
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        with:
+          command: monitor
+          args: --file=vulcode/requirements.txt --package-manager=pip
 
-      # Convert JSON to HTML (optional)
+      # Convert JSON to HTML
       - name: Convert JSON to HTML
         run: python convert_to_html.py
 
-      # Upload JSON and HTML reports
+      # Upload both JSON and HTML reports
       - name: Upload reports
         uses: actions/upload-artifact@v4
         with:
@@ -52,6 +68,6 @@ jobs:
             report.html
 
       # Show CLI summary in logs
-      - name: Show Snyk vulnerabilities summary
+      - name: Show Snyk results (CLI summary)
         run: |
-          cat report.json | jq '.vulnerabilities[] | {id, severity, title}' || echo "No vulnerabilities found"
+          cat report.json | jq '.vulnerabilities[] | {id, severity, title}'
