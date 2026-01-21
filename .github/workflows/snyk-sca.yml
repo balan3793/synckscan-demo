@@ -1,7 +1,7 @@
 name: Snyk SCA Scan
 
 on:
-  workflow_dispatch:   # 👈 manual trigger from Actions tab
+  workflow_dispatch:   # manual trigger from Actions tab
   push:
     paths:
       - 'vulcode/**'
@@ -16,7 +16,14 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Run Snyk SCA
+      # Install jq for JSON parsing
+      - name: Install jq
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y jq
+
+      # Run local Snyk test (outputs JSON file)
+      - name: Run Snyk SCA (local test)
         uses: snyk/actions/python@master
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
@@ -24,12 +31,29 @@ jobs:
           command: test
           args: --file=vulcode/requirements.txt --package-manager=pip --skip-unresolved --json-file-output=report.json
 
-      - name: Upload report
+      # Push results to Snyk dashboard
+      - name: Push results to Snyk dashboard
+        uses: snyk/actions/python@master
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        with:
+          command: monitor
+          args: --file=vulcode/requirements.txt --package-manager=pip
+
+      # Convert JSON to HTML
+      - name: Convert JSON to HTML
+        run: python convert_to_html.py
+
+      # Upload both JSON and HTML reports
+      - name: Upload reports
         uses: actions/upload-artifact@v4
         with:
-          name: snyk-sca-report
-          path: report.json
+          name: snyk-sca-reports
+          path: |
+            report.json
+            report.html
 
-      - name: Show Snyk results
+      # Show CLI summary in logs
+      - name: Show Snyk results (CLI summary)
         run: |
           cat report.json | jq '.vulnerabilities[] | {id, severity, title}'
