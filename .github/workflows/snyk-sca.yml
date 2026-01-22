@@ -31,7 +31,8 @@ jobs:
       # ✅ Skips compilation failures for lxml/celery
       - name: Install dependencies (PoC-safe)
         run: |
-          pip install --ignore-installed --no-deps -r vulcode/requirements.txt || true
+          python -m pip install --upgrade pip
+          pip install --no-build-isolation --ignore-installed -r vulcode/requirements.txt || true
 
       # 6️⃣ Set up Snyk CLI
       - name: Set up Snyk CLI
