@@ -1,21 +1,28 @@
 name: Snyk SCA Scan
- 
+
 on:
-  workflow_dispatch:   # 👈 manual trigger from Actions tab
+  workflow_dispatch:   # Manual trigger
   push:
     paths:
       - 'vulcode/**'
   pull_request:
     paths:
       - 'vulcode/**'
- 
+
 jobs:
   snyk:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
- 
+
+      # ⚡ Install dependencies (important for Python SCA!)
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r vulcode/requirements.txt
+
+      # 🔍 Run Snyk test
       - name: Run Snyk SCA
         uses: snyk/actions/python@master
         env:
@@ -23,13 +30,24 @@ jobs:
         with:
           command: test
           args: --file=vulcode/requirements.txt --package-manager=pip --skip-unresolved --json-file-output=report.json
- 
+
+      # 📊 Monitor project in Snyk dashboard
+      - name: Monitor Snyk project
+        uses: snyk/actions/python@master
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        with:
+          command: monitor
+          args: --file=vulcode/requirements.txt --package-manager=pip
+
+      # 📂 Upload JSON report as artifact
       - name: Upload report
         uses: actions/upload-artifact@v4
         with:
           name: snyk-sca-report
           path: report.json
- 
+
+      # 🖥️ Show summary of vulnerabilities
       - name: Show Snyk results
         run: |
           cat report.json | jq '.vulnerabilities[] | {id, severity, title}'
