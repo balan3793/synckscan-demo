@@ -12,11 +12,12 @@ idna>=3.7 # not directly required, pinned by Snyk to avoid a vulnerability
 setuptools>=78.1.1 # not directly required, pinned by Snyk to avoid a vulnerability
 sqlparse>=0.5.4 # not directly required, pinned by Snyk to avoid a vulnerability
 zipp>=3.19.1 # not directly required, pinned by Snyk to avoid a vulnerability
-Werkzeug==0.14.1       # CVE-2018-1000657
+Werkzeug==3.1.5       # CVE-2018-1000657
 Markdown==2.6.8        # CVE-2019-11358
-paramiko==2.4.2        # CVE-2018-10903
-cryptography==2.3      # CVE-2018-10903
-lxml==3.7.0            # CVE-2017-12115
-celery==4.1.0          # CVE-2019-5592
+paramiko==3.4.0        # CVE-2018-10903
+cryptography==42.0.8      # CVE-2018-10903
+lxml==4.9.1            # CVE-2017-12115
+celery==5.2.2          # CVE-2019-5592
 pytest==3.8.0          # CVE-2018-14574
 python-dateutil==2.6.0 # CVE-2018-1000656
+pyasn1>=0.6.2 # not directly required, pinned by Snyk to avoid a vulnerability
