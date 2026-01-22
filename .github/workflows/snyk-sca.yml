@@ -12,44 +12,37 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # 1️⃣ Checkout code
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # 2️⃣ Setup Python
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.10"
 
-      # 3️⃣ Downgrade pip (required for old / broken metadata packages)
       - name: Downgrade pip for legacy dependencies
         run: python -m pip install "pip<24.1"
 
-      # 4️⃣ Install dependencies WITHOUT resolving conflicts (PoC-safe)
-      - name: Install dependencies (ignore conflicts for PoC)
+      # 🔥 KEY FIX: no deps + binary only (prevents lxml build)
+      - name: Install dependencies (PoC-safe)
         run: |
-          pip install -r vulcode/requirements.txt --no-deps
+          pip install -r vulcode/requirements.txt --no-deps --only-binary=:all: || true
 
-      # 5️⃣ Install Snyk CLI
       - name: Set up Snyk CLI
         uses: snyk/actions/setup@master
         with:
           snyk-version: latest
 
-      # 6️⃣ Run Snyk SCA scan
       - name: Run Snyk Scan
         run: snyk test --all-projects --json-file-output=snyk-report.json
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
 
-      # 7️⃣ Upload results to Snyk Dashboard
       - name: Monitor Project in Snyk
         run: snyk monitor --all-projects
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
 
-      # 8️⃣ Upload report as GitHub artifact
       - name: Upload Snyk Report
         uses: actions/upload-artifact@v4
         with:
