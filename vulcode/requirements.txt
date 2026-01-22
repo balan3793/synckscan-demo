@@ -1,28 +1,10 @@
-# Intentionally vulnerable dependencies for Snyk PoC
-
-Flask==0.12
-requests==2.19.0
-PyYAML==5.3
-boto3==1.9.0
-
-# Use older Django that actually matches CVEs
-Django==2.2.0
-
-Jinja2==2.10
-SQLAlchemy==1.3.0
-Werkzeug==0.14.1
-Markdown==2.6.8
-paramiko==2.4.2
-cryptography==2.3
-pytest==3.8.0
-python-dateutil==2.6.0
-
-# ⚠️ REMOVE these (cause CI failure)
-# lxml==3.7.0
-# celery==4.1.0
-
-# ⚠️ REMOVE Snyk-pinned transitive deps
-# idna>=3.7
-# setuptools>=78.1.1
-# sqlparse>=0.5.4
-# zipp>=3.19.1
+Flask==0.11
+requests==2.18.4
+PyYAML==3.12
+Django==1.11.0
+Jinja2==2.9.6
+SQLAlchemy==1.2.0
+Werkzeug==0.11.15
+paramiko==2.1.2
+cryptography==1.9
+pytest==3.2.5
