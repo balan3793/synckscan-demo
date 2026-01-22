@@ -6,9 +6,9 @@ PyYAML==5.3
 boto3==1.9.0
 
 # Use older Django that actually matches CVEs
-Django==2.2.0
+Django==4.2.27
 
-Jinja2==2.10
+Jinja2==3.1.6
 SQLAlchemy==1.3.0
 Werkzeug==0.14.1
 Markdown==2.6.8
@@ -26,3 +26,6 @@ python-dateutil==2.6.0
 # setuptools>=78.1.1
 # sqlparse>=0.5.4
 # zipp>=3.19.1
+idna>=3.7 # not directly required, pinned by Snyk to avoid a vulnerability
+sqlparse>=0.5.4 # not directly required, pinned by Snyk to avoid a vulnerability
+urllib3>=1.25.9 # not directly required, pinned by Snyk to avoid a vulnerability
