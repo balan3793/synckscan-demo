@@ -1,26 +1,59 @@
-- name: Set up Python
-  uses: actions/setup-python@v5
-  with:
-    python-version: "3.10"
+name: Snyk Project File Scan (PoC)
 
-- name: Downgrade pip
-  run: python -m pip install "pip<24.1"
+# 1️⃣ Manual trigger
+on:
+  workflow_dispatch:
 
-- name: Install dependencies (PoC-safe)
-  run: |
-    pip install --ignore-installed --no-deps -r vulcode/requirements.txt || true
+permissions:
+  contents: read
+  security-events: write
 
-- name: Set up Snyk CLI
-  uses: snyk/actions/setup@master
-  with:
-    snyk-version: latest
+jobs:
+  snyk_file_scan:
+    runs-on: ubuntu-latest
 
-- name: Run Snyk Scan
-  run: snyk test --file=vulcode/requirements.txt --package-manager=pip --json-file-output=snyk-report.json
-  env:
-    SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+    steps:
+      # 2️⃣ Checkout repo
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-- name: Monitor Project in Snyk
-  run: snyk monitor --file=vulcode/requirements.txt --package-manager=pip
-  env:
-    SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+      # 3️⃣ Set up Python
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+
+      # 4️⃣ Downgrade pip to avoid old package metadata issues
+      - name: Downgrade pip for legacy dependencies
+        run: python -m pip install "pip<24.1"
+
+      # 5️⃣ Install PoC dependencies safely
+      # ✅ Skips compilation failures for lxml/celery
+      - name: Install dependencies (PoC-safe)
+        run: |
+          pip install --ignore-installed --no-deps -r vulcode/requirements.txt || true
+
+      # 6️⃣ Set up Snyk CLI
+      - name: Set up Snyk CLI
+        uses: snyk/actions/setup@master
+        with:
+          snyk-version: latest
+
+      # 7️⃣ Run Snyk scan (manifest mode)
+      - name: Run Snyk Scan
+        run: snyk test --file=vulcode/requirements.txt --package-manager=pip --json-file-output=snyk-report.json
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+
+      # 8️⃣ Upload results to Snyk dashboard
+      - name: Monitor Project in Snyk
+        run: snyk monitor --file=vulcode/requirements.txt --package-manager=pip
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+
+      # 9️⃣ Upload Snyk report as artifact
+      - name: Upload Snyk Report
+        uses: actions/upload-artifact@v4
+        with:
+          name: snyk-report
+          path: snyk-report.json
