@@ -1,10 +1,11 @@
 Flask==0.11
 requests==2.18.4
-PyYAML==3.12
-Django==1.11.0
+PyYAML==4.2b1
+Django==1.11.19
 Jinja2==2.9.6
-SQLAlchemy==1.2.0
-Werkzeug==0.11.15
-paramiko==2.1.2
-cryptography==1.9
+SQLAlchemy==1.2.18
+Werkzeug==0.12
+paramiko==2.1.5
+cryptography==2.3
 pytest==3.2.5
+urllib3>=1.23 # not directly required, pinned by Snyk to avoid a vulnerability
