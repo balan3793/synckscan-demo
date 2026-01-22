@@ -1,52 +1,35 @@
 name: Snyk SCA Scan
-
+ 
 on:
-  workflow_dispatch:   # Manual trigger
+  workflow_dispatch:   # 👈 manual trigger from Actions tab
   push:
     paths:
       - 'vulcode/**'
   pull_request:
     paths:
       - 'vulcode/**'
-
+ 
 jobs:
   snyk:
     runs-on: ubuntu-latest
     steps:
-      # 1️⃣ Checkout repository
       - name: Checkout code
         uses: actions/checkout@v4
-
-      # 2️⃣ Run Snyk test (skip unresolved to avoid pip conflicts)
-      - name: Run Snyk SCA Test
+ 
+      - name: Run Snyk SCA
         uses: snyk/actions/python@master
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
         with:
           command: test
           args: --file=vulcode/requirements.txt --package-manager=pip --skip-unresolved --json-file-output=report.json
-
-      # 3️⃣ Monitor project in Snyk dashboard (skip unresolved for old CVE packages)
-      - name: Monitor Snyk Project
-        uses: snyk/actions/python@master
-        env:
-          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
-        with:
-          command: monitor
-          args: --file=vulcode/requirements.txt --package-manager=pip --skip-unresolved
-
-      # 4️⃣ Upload JSON report as artifact
-      - name: Upload Snyk JSON report
+ 
+      - name: Upload report
         uses: actions/upload-artifact@v4
         with:
           name: snyk-sca-report
           path: report.json
-
-      # 5️⃣ Show summary of vulnerabilities in logs
-      - name: Show Snyk Vulnerabilities Summary
+ 
+      - name: Show Snyk results
         run: |
-          if [ -s report.json ]; then
-            cat report.json | jq '.vulnerabilities[] | {id, severity, title}'
-          else
-            echo "No vulnerabilities found"
-          fi
+          cat report.json | jq '.vulnerabilities[] | {id, severity, title}'
