@@ -20,9 +20,11 @@ jobs:
         with:
           python-version: "3.10"
 
+      - name: Downgrade pip for legacy deps
+        run: python -m pip install "pip<24.1"
+
       - name: Install dependencies
-        run: |
-          pip install -r vulcode/requirements.txt
+        run: pip install -r vulcode/requirements.txt
 
       - name: Set up Snyk CLI
         uses: snyk/actions/setup@master
