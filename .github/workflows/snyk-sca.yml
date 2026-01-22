@@ -17,8 +17,8 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # 2️⃣ Run Snyk test (without installing conflicting packages)
-      - name: Run Snyk SCA
+      # 2️⃣ Run Snyk test (skip unresolved to avoid pip conflicts)
+      - name: Run Snyk SCA Test
         uses: snyk/actions/python@master
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
@@ -26,24 +26,24 @@ jobs:
           command: test
           args: --file=vulcode/requirements.txt --package-manager=pip --skip-unresolved --json-file-output=report.json
 
-      # 3️⃣ Monitor project in Snyk dashboard
-      - name: Monitor Snyk project
+      # 3️⃣ Monitor project in Snyk dashboard (skip unresolved for old CVE packages)
+      - name: Monitor Snyk Project
         uses: snyk/actions/python@master
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
         with:
           command: monitor
-          args: --file=vulcode/requirements.txt --package-manager=pip
+          args: --file=vulcode/requirements.txt --package-manager=pip --skip-unresolved
 
       # 4️⃣ Upload JSON report as artifact
-      - name: Upload Snyk report
+      - name: Upload Snyk JSON report
         uses: actions/upload-artifact@v4
         with:
           name: snyk-sca-report
           path: report.json
 
       # 5️⃣ Show summary of vulnerabilities in logs
-      - name: Show Snyk results
+      - name: Show Snyk Vulnerabilities Summary
         run: |
           if [ -s report.json ]; then
             cat report.json | jq '.vulnerabilities[] | {id, severity, title}'
