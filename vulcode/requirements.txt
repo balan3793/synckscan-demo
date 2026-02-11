@@ -8,4 +8,4 @@ Werkzeug==0.12
 paramiko==2.1.5
 cryptography==2.3
 pytest==3.2.5
-urllib3>=1.23 # not directly required, pinned by Snyk to avoid a vulnerability
+urllib3>=2.6.3 # not directly required, pinned by Snyk to avoid a vulnerability
