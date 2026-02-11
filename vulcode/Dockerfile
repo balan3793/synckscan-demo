@@ -1,5 +1,5 @@
 # NOTE: contains patterns commonly flagged by scanners (for testing).
-FROM python:3.9-slim
+FROM python:3.14.3-slim
 
 # storing credentials in ENV (Issue 1)
 ENV AWS_ACCESS_KEY_ID=EXAMPLEKEY123
